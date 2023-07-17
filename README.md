@@ -17,14 +17,19 @@ In fact, the UserSegment value for "Everyone" is actually a null, stored in a Lo
 ## Environment
 This program requires some environment variables to establish a connection to Zendesk and (optionally) to Slack: 
 ```shell
-export ZENDESK_EMAIL=your.email@somewhere.com
-export ZENDESK_TOKEN=ffbglkfbYourZendeskTokenptrhb5jp42m
-export ZENDESK_URL=https://somewhere.zendesk.com
-export SLACKLIB_TOKEN=xoxb-34859038409-45908608430423-dfkjkdblahblahlfnonvoev
+export ZENDESK_EMAIL="your.email@somewhere.com"
+export ZENDESK_TOKEN="ffbglkfbYourZendeskTokenptrhb5jp42m"
+export ZENDESK_URL="https://somewhere.zendesk.com"
+export SLACKLIB_TOKEN="xoxb-34859038409-45908608430423-dfkjkdblahblahlfnonvoev"
+export SLACK_NOTIFICATION_LIST="bobp;Mickey;Minnie123"
 ```
 Also, to send Slack notifications this program uses another small library that I have posted 
-here on GitHub: `git clone https://github.com/rcprcp/SimpleSlack`. If you don't want the Slack notifications,
-remove the SimpleSlack library from the pom.xml, and update the code as needed.
+here on GitHub: `git clone https://github.com/rcprcp/SimpleSlack`. 
+
+The Slack display names are picked up from the SLACK_NOTIFICATION_LIST, separated by ";". The names must match the Slack Display 
+names exactly (e.g. they are case sensitive), only leading and trailing spaces are removed.
+If you don't want the Slack notifications, don't set the  SLACK_NOTIFICATION_LIST.  Also, if you don't want to build with 
+the SimpleSlack library, feel free to remove it from the pom.xml, and update the code as needed.
 
 ## Download the source
 ```shell

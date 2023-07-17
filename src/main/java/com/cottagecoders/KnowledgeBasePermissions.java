@@ -12,7 +12,6 @@ import org.zendesk.client.v2.Zendesk;
 import org.zendesk.client.v2.model.Status;
 import org.zendesk.client.v2.model.Ticket;
 import org.zendesk.client.v2.model.hc.Article;
-import org.zendesk.client.v2.model.hc.PermissionGroup;
 import org.zendesk.client.v2.model.hc.UserSegment;
 
 import java.io.IOException;
@@ -20,23 +19,17 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class KnowledgeBasePermissions {
   private static final Logger LOG = LogManager.getLogger(KnowledgeBasePermissions.class);
-
+  private static final String SLACK_USER_NAMME = "bobp";
   @Parameter(names = {"--current"}, description = "current permission level")
   private String current = "";
-
   @Parameter(names = {"--destination"}, description = "destination permission level")
   private String destination = "";
-
-  @Parameter(names = {"--printManagers"}, description = "print a list of 'managed by' identifiers")
-  private boolean printManagers = false;
-
-  @Parameter(names = {"--printUsers"}, description = "print a list of the User Segments identifiers")
+  @Parameter(names = {"--printUserSegments"}, description = "print a list of the UserSegment identifiers")
   private boolean printUsers = false;
-
-  private static final String SLACK_USER_NAMME = "bobp";
 
   public static void main(String[] argv) {
     KnowledgeBasePermissions zdr = new KnowledgeBasePermissions();
@@ -63,7 +56,7 @@ public class KnowledgeBasePermissions {
         segmentsById.put(u.getId(), u.getName());
       }
 
-      // add "Everyone" because it does not sho up in the UserSegment list.
+      // add "Everyone" because it does not shoe up in the UserSegment list.
       segmentsByName.put("Everyone", -1L);
       segmentsById.put(-1L, "Everyone");
 
@@ -73,9 +66,6 @@ public class KnowledgeBasePermissions {
         System.exit(0);
 
       }
-
-      //TODO: remove debugging code.
-      printUserSegments(segmentsByName);
 
       // validate user input... need to have a current and a destination
       if (StringUtils.isEmpty(current) || StringUtils.isEmpty(destination) || current.equals(destination)) {
@@ -101,8 +91,8 @@ public class KnowledgeBasePermissions {
         if (segmentsById.get(a.getUserSegmentId()).equals(current)) {
           // matched by name, check kludge because "Everyone" was represented by null.
           Long dval = segmentsByName.get(destination);
-          if (dval == -1) {  // this was the re-mapped value for null.
-            a.setUserSegmentId(null);   // set null value in article.
+          if (dval == -1) {             // this was the re-mapped value for null.
+            a.setUserSegmentId(null);   // set null value occurs in the UserSegment in this article.
           } else {
             a.setUserSegmentId(dval);   // set new value in article.
           }
@@ -153,24 +143,42 @@ public class KnowledgeBasePermissions {
 
   void SlackIt(String msg) {
 
-    FetchMembers fetch = new FetchMembers();
-    Map<String, Member> members = null;
+    // fetch and parse the notification list.
+    String envVar = System.getenv("SLACK_NOTIFICATION_LIST");
+    if(StringUtils.isEmpty(envVar)) {
+      System.out.println("No notifications - SLACK_NOTIFICATION_LIST is empty.");
+      return;
+    }
+
+    String [] slackDisplayNames = envVar.split(";");
+    if(slackDisplayNames == null || slackDisplayNames.length == 0) {
+      System.out.println("No notifications - can't split SLACK_NOTIFICATION_LIST.");
+      return;
+    }
 
     try {
-      String SLACKLIB_TOKEN = System.getenv("SLACKLIB_TOKEN");
-      members = fetch.fetchAllMembers();
-      Member member = members.get("bobp");
+      FetchMembers fetch = new FetchMembers();
 
-      SendSlackMessage ssm = new SendSlackMessage();
-      ssm.sendDM(member.getId(), msg);
+      Map<String, Member> members = null;
+      // gather list of members from Slack
+      members = fetch.fetchAllMembers();
+
+      for(String s: slackDisplayNames) {
+        // get specific user
+        Member member = members.get(s.trim());
+        if (member == null) {
+          // user lookup failed.
+          continue;
+        }
+
+        SendSlackMessage ssm = new SendSlackMessage();
+        ssm.sendDM(member.getId(), msg);
+      }
 
     } catch (IOException | InterruptedException ex) {
       System.out.println("fetch.fetchAllMembers() exception: " + ex.getMessage());
       ex.printStackTrace();
       System.exit(12);
     }
-
   }
-
 }
-
