@@ -21,7 +21,7 @@ export ZENDESK_EMAIL="your.email@somewhere.com"
 export ZENDESK_TOKEN="ffbglkfbYourZendeskTokenptrhb5jp42m"
 export ZENDESK_URL="https://somewhere.zendesk.com"
 export SLACKLIB_TOKEN="xoxb-34859038409-45908608430423-dfkjkdblahblahlfnonvoev"
-export SLACK_NOTIFICATION_LIST="bobp;Mickey;Minnie123"
+export SLACK_NOTIFICATION_LIST="bobp,Mickey,Minnie123"
 ```
 Also, to send Slack notifications this program uses another small library that I have posted 
 here on GitHub: `git clone https://github.com/rcprcp/SimpleSlack`. 

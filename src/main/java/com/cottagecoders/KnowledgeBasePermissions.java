@@ -150,7 +150,7 @@ public class KnowledgeBasePermissions {
       return;
     }
 
-    String [] slackDisplayNames = envVar.split(";");
+    String [] slackDisplayNames = envVar.split(",");
     if(slackDisplayNames == null || slackDisplayNames.length == 0) {
       System.out.println("No notifications - can't split SLACK_NOTIFICATION_LIST.");
       return;
