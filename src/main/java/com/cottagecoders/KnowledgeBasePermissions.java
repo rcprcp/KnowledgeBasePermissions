@@ -2,28 +2,17 @@ package com.cottagecoders;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import com.cottagecoders.simpleslack.FetchMembers;
 import com.cottagecoders.simpleslack.SendSlackMessage;
-import com.cottagecoders.simpleslack.userlist.Member;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.zendesk.client.v2.Zendesk;
-import org.zendesk.client.v2.model.Status;
-import org.zendesk.client.v2.model.Ticket;
 import org.zendesk.client.v2.model.hc.Article;
 import org.zendesk.client.v2.model.hc.UserSegment;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 public class KnowledgeBasePermissions {
-  private static final Logger LOG = LogManager.getLogger(KnowledgeBasePermissions.class);
-  private static final String SLACK_USER_NAMME = "bobp";
   @Parameter(names = {"--current"}, description = "current permission level")
   private String current = "";
   @Parameter(names = {"--destination"}, description = "destination permission level")
@@ -134,51 +123,24 @@ public class KnowledgeBasePermissions {
                    .build();
   }
 
-  ArrayList<Ticket> getArticles(Zendesk zd, Status status, long orgId) {
-    ArrayList<Ticket> results = new ArrayList<>();
-
-
-    return results;
-  }
-
   void SlackIt(String msg) {
 
     // fetch and parse the notification list.
     String envVar = System.getenv("SLACK_NOTIFICATION_LIST");
-    if(StringUtils.isEmpty(envVar)) {
+    if (StringUtils.isEmpty(envVar)) {
       System.out.println("No notifications - SLACK_NOTIFICATION_LIST is empty.");
       return;
     }
 
-    String [] slackDisplayNames = envVar.split(",");
-    if(slackDisplayNames == null || slackDisplayNames.length == 0) {
+    String[] slackDisplayNames = envVar.split(",");
+    if (slackDisplayNames.length == 0) {
       System.out.println("No notifications - can't split SLACK_NOTIFICATION_LIST.");
       return;
     }
 
-    try {
-      FetchMembers fetch = new FetchMembers();
-
-      Map<String, Member> members = null;
-      // gather list of members from Slack
-      members = fetch.fetchAllMembers();
-
-      for(String s: slackDisplayNames) {
-        // get specific user
-        Member member = members.get(s.trim());
-        if (member == null) {
-          // user lookup failed.
-          continue;
-        }
-
-        SendSlackMessage ssm = new SendSlackMessage();
-        ssm.sendDM(member.getId(), msg);
-      }
-
-    } catch (IOException | InterruptedException ex) {
-      System.out.println("fetch.fetchAllMembers() exception: " + ex.getMessage());
-      ex.printStackTrace();
-      System.exit(12);
+    SendSlackMessage ssm = new SendSlackMessage();
+    for (String displayName : slackDisplayNames) {
+      ssm.sendDMByDisplayName(displayName, System.getenv("SLACKLIB_TOKEN"), msg);
     }
   }
 }
